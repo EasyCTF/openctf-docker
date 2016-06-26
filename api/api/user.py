@@ -63,9 +63,11 @@ def verify_email():
 		current_session.add(user)
 		current_session.commit()
 
-		if send_verification(user.username, user.email, token):
-			return { "success": 1, "message": "Verification email sent to %s" % user.email }
-		return { "success": 0, "message": "Failed." }
+		try:
+			send_verification(user.username, user.email, token)
+		except:
+			return { "success": 0, "message": "Failed." }
+		return { "success": 1, "message": "Verification email sent to %s" % user.email }
 
 @blueprint.route("/update_profile", methods=["POST"])
 @login_required
@@ -181,7 +183,9 @@ def user_register():
 	logger.log(__name__, "%s registered with %s" % (name.encode("utf-8"), email.encode("utf-8")))
 	login_user(username, password)
 
-	if send_verification(username, email, token):
+	try:
+		send_verification(username, email, token)
+	except:
 		return { "success": 1, "message": "Verification email sent to %s" % email }
 	return { "success": 0, "message": "Failed." }
 

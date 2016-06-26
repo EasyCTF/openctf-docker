@@ -181,10 +181,10 @@ function api_call(method, url, data, callback_success, callback_fail) {
 		if (result && result["redirect"] && location.pathname != result["redirect"]) {
 			location.href = result["redirect"];
 		} else {
-			callback_success(result);
+			if (callback_success) callback_success(result);
 		}
 	}).error(function(jqXHR) {
-		callback_fail(jqXHR);
+		if (callback_fail) callback_fail(jqXHR);
 	});
 }
 
@@ -408,14 +408,20 @@ app.controller("teamController", function($controller, $scope, $http, result) {
 	}
 	onContentLoaded(function() { $(".timeago").timeago(); });
 
-	$("#teamname_edit").on("blur keyup paste", function() {
+	// $("#teamname_edit").on("blur keyup paste", function() {
+	window.edit_teamname = function() {
 		var data = { "new_teamname": $("#teamname_edit").text() }
-		api_call("POST", "/api/team/edit", data);
-	});
-	$("#school_edit").on("blur keyup paste", function() {
+		api_call("POST", "/api/team/edit", data, function() {
+			$("#teamname_edit").blur();
+		});
+	};
+	// $("#school_edit").on("blur keyup paste", function() {
+	window.edit_school = function() {
 		var data = { "new_school": $("#school_edit").text() }
-		api_call("POST", "/api/team/edit", data);
-	});
+		api_call("POST", "/api/team/edit", data, function() {
+			$("#school_edit").blur();
+		});
+	};
 });
 
 app.controller("helpController", function($controller, $scope, $http, $routeParams, result) {
@@ -743,8 +749,19 @@ var add_member = function() {
 	});
 };
 
+var remove_member = function(username) {
+	if (confirm("Are you sure you want to remove this member?")) {
+		var data = { "username": username };
+		api_call("POST", "/api/team/remove_member", data, function(result) {
+			if (result["success"] == 1) {
+				location.reload(true);
+			}
+		});
+	}
+};
+
+
 var rescind_invitation = function(uid) {
-	var input = "#add_member input";
 	var data = { "uid": uid };
 	api_call("POST", "/api/team/invite/rescind", data, function(result) {
 		if (result["success"] == 1) {
@@ -754,7 +771,6 @@ var rescind_invitation = function(uid) {
 };
 
 var request_invitation = function(tid) {
-	var input = "#add_member input";
 	var data = { "tid": tid };
 	api_call("POST", "/api/team/invite/request", data, function(result) {
 		if (result["success"] == 1) {

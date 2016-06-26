@@ -84,10 +84,16 @@ def team_remove_member():
 		raise WebException("This team is finalized.")
 	if usr.uid == owner or usr.admin:
 		params = utils.flat_multi(request.form)
-		user_to_remove = Users.query.filter_by(username=params.get("user"))
-		user_to_remove.tid = -1
+		to_remove = params.get("username")
+		if to_remove is None:
+			return { "success": 0, "message": "ur high" }
+		user_to_remove = Users.query.filter_by(username_lower=to_remove.lower()).first()
+		if user_to_remove is None:
+			return { "success": 0, "message": "User not found." }
+		if user_to_remove.tid != tid:
+			return { "success": 0, "message": "This user is not on your team!" }
 		with app.app_context():
-			db.session.add(user_to_remove)
+			Users.query.filter_by(uid=user_to_remove.uid).update({ "tid": -1 })
 			db.session.commit()
 			db.session.close()
 		return { "success": 1, "message": "Success!" }
@@ -351,10 +357,10 @@ TeamSchema = Schema({
 	Required("teamname"): check(
 		([str, Length(min=4, max=32)], "Your teamname should be between 4 and 32 characters long."),
 		([utils.__check_ascii], "Please only use ASCII characters in your teamname."),
-		([__check_teamname], "This teamname is taken, did you forget your password?")
+		([__check_teamname], "This teamname is taken. Please choose a different one.")
 	),
 	Required("school"): check(
-		([str, Length(min=4, max=40)], "Your school name should be between 4 and 40 characters long."),
+		([str, Length(min=4, max=40)], "Your school name should be between 4 and 40 characters long. Use abbreviations if necessary."),
 		([utils.__check_ascii], "Please only use ASCII characters in your school name."),
 	),
 }, extra=True)

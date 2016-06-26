@@ -1,2 +1,4 @@
 *.pyc
 .secret_key
+pfp
+logs

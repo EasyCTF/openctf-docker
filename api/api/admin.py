@@ -119,11 +119,10 @@ def admin_team_overview():
 @api_wrapper
 def admin_info():
 	settings = get_settings()
-	result = {
-		"start_time": settings["start_time"],
-		"end_time": settings["end_time"],
-		"team_size": settings["team_size"]
-	}
+	result = { }
+	if "start_time" in settings: result["start_time"] = settings["start_time"]
+	if "end_time" in settings: result["end_time"] = settings["end_time"]
+	if "team_size" in settings: result["team_size"] = settings["team_size"]
 	return { "success": 1, "info": result }
 
 def get_settings():
