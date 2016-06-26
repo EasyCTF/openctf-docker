@@ -48,3 +48,46 @@ def api_wrapper(f):
 
 		return response
 	return wrapper
+
+def login_required(f):
+	@wraps(f)
+	def wrapper(*args, **kwds):
+		if not user.is_logged_in():
+			return { "success": 0, "message": "Not logged in." }
+		return f(*args, **kwds)
+	return wrapper
+
+def team_required(f):
+	@wraps(f)
+	def wrapper(*args, **kwds):
+		if "tid" not in session or session["tid"] < 0:
+			return { "success": 0, "message": "You need a team." }
+		return f(*args, **kwds)
+	return wrapper
+
+def team_finalize_required(f):
+	@wraps(f)
+	def wrapper(*args, **kwds):
+		if team.get_team(tid=session["tid"]).first().finalized != True:
+			return { "success": 0, "message": "Your team must be finalized to view this content!" }
+		return f(*args, **kwds)
+	return wrapper
+
+import user # Must go below api_wrapper to prevent import loops
+import team
+
+def admins_only(f):
+	@wraps(f)
+	def wrapper(*args, **kwds):
+		if not user.is_admin():
+			return { "success": 0, "message": "Not authorized." }
+		return f(*args, **kwds)
+	return wrapper
+
+def email_verification_required():
+	@wraps(f)
+	def wrapper(*args, **kwds):
+		if not user.is_email_verified():
+			return { "success": 0, "message": "Email not verified." }
+		return f(*args, **kwds)
+	return wrapper
