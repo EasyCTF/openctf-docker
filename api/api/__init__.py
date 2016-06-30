@@ -5,6 +5,7 @@ import decorators
 import cache
 import logger
 import models
+import pages
 import problem
 import programming
 import stats
