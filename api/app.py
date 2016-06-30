@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, send_file
 
 app = Flask(__name__)
+app.config["DEBUG"] = True
 
 import api
 import config
@@ -34,13 +35,14 @@ def hello_world():
 
 @app.errorhandler(404)
 def page_not_found(e):
-	return send_file("../web/index.html"), 404
+	return "You done goofed."
 
 app.register_blueprint(api.activity.blueprint, url_prefix="/api/activity")
 app.register_blueprint(api.admin.blueprint, url_prefix="/api/admin")
-app.register_blueprint(api.programming.blueprint, url_prefix="/api/programming")
 app.register_blueprint(api.user.blueprint, url_prefix="/api/user")
+app.register_blueprint(api.pages.blueprint, url_prefix="/api/pages")
 app.register_blueprint(api.problem.blueprint, url_prefix="/api/problem")
+app.register_blueprint(api.programming.blueprint, url_prefix="/api/programming")
 app.register_blueprint(api.stats.blueprint, url_prefix="/api/stats")
 app.register_blueprint(api.team.blueprint, url_prefix="/api/team")
 app.register_blueprint(api.tickets.blueprint, url_prefix="/api/tickets")

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask import current_app as app
 from decorators import admins_only, api_wrapper, WebException
-from models import db, Config, Problems, Teams, Users, UserActivity
+from models import db, Config, Pages, Problems, Teams, Users, UserActivity
 from schemas import verify_to_schema, check
 from operator import itemgetter
 
@@ -56,11 +56,13 @@ def admin_setup():
 	]
 
 	_user = Users(name, username, email, password, utype=utype, admin=True)
+	homepage = Pages("Home", open("default_homepage.md").read())
 	with app.app_context():
 		for var in setup_vars:
 			db.session.add(var)
 
 		db.session.add(_user)
+		db.session.add(homepage)
 		db.session.commit()
 		join_activity = UserActivity(_user.uid, 0)
 		db.session.add(join_activity)

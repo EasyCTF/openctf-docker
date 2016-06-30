@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from slugify import slugify
 
 import time
 import traceback
@@ -461,22 +462,21 @@ class Pages(db.Model):
 	pgid = db.Column(db.Integer, primary_key=True)
 	pvid = db.Column(db.Integer)
 	title = db.Column(db.String(256))
+	slug = db.Column(db.String(256))
 	content = db.Column(db.Text)
 
-	def __init__(self, title, content, pvid = -1):
-		self.pvid = pvid
+	def __init__(self, title, content, slug=None):
 		self.title = title
 		self.content = content
 
+		if slug is None:
+			slug = slugify(title)
+		self.slug = slug
+
+	@staticmethod
 	def get_all_pages():
 		pages = list(Pages.query.filter_by().all())
-		page_results = []
-		current_page = filter(lambda x: x.pvid == -1, pages)[0]
-		while len(pages) > 0:
-			pages.remove(current_page)
-			page_results.append(current_page)
-			current_page = filter(lambda x: x.pvid == current_page.pgid, pages)[0]
-		return page_results
+		return pages
 
 	def get_html(self):
 		return markdown2.markdown(self.content)
