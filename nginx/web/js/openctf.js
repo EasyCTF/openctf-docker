@@ -209,6 +209,12 @@ app.controller("mainController", function($scope, $http, $location) {
 	api_call("GET", "/api/user/status", {}, function(result) {
 		if (result["success"] == 1) {
 			delete result["success"];
+			if ("stylesheet" in result) {
+				var style = document.createElement("link");
+				style.rel = "stylesheet";
+				style.href = result["stylesheet"];
+				document.body.appendChild(style);
+			}
 			$scope.config.navbar = result;
 			document.title = result["ctf_name"];
 			$scope.$emit("loginStatus");

@@ -52,6 +52,7 @@ def admin_setup():
 		Config("start_time", params.get("start_time")),
 		Config("end_time", params.get("end_time")),
 		Config("team_size", params.get("team_size")),
+		Config("stylesheet", "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"),
 		Config("setup_complete", True)
 	]
 
@@ -125,6 +126,7 @@ def admin_info():
 	if "start_time" in settings: result["start_time"] = settings["start_time"]
 	if "end_time" in settings: result["end_time"] = settings["end_time"]
 	if "team_size" in settings: result["team_size"] = settings["team_size"]
+	if "stylesheet" in settings: result["stylesheet"] = settings["stylesheet"]
 	return { "success": 1, "info": result }
 
 def get_settings():

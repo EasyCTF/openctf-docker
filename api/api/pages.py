@@ -8,13 +8,20 @@ import slugify
 
 blueprint = Blueprint("pages", __name__)
 
+def is_int(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
+
 @blueprint.route("/get")
 @cache.memoize(timeout=1200)
 def get_page():
 	pg = request.args.get("page")
-	page = Pages.query.filter((Pages.slug == slugify.slugify(pg)) | (Pages.pgid == int(pg))).first()
+	page = Pages.query.filter((Pages.slug == slugify.slugify(pg)) | (is_int(pg) and Pages.pgid == int(pg))).first()
 	if page is None:
-		return { "success": 0, "message": "No page found." }
+		return "No page found."
 	r = Response(page.get_html())
 	r.headers["Content-Type"] = "text/html"
 	return r
