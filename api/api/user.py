@@ -238,7 +238,8 @@ def user_status():
 		"competition": utils.is_ctf_time(),
 		"in_team": in_team(get_user()),
 		"username": session["username"] if logged_in else "",
-		"ctf_name": utils.get_ctf_name()
+		"ctf_name": utils.get_ctf_name(),
+		"stylesheet": utils.get_config("stylesheet", "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css")
 	}
 	if logged_in:
 		result["has_team"] = in_team(get_user().first())

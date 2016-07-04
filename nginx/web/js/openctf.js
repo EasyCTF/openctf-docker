@@ -1,5 +1,6 @@
 var app = angular.module("openctf", [ "ngRoute" ]);
 var $http = angular.injector(["ng"]).get("$http");
+var stylesheet_loaded = false;
 
 app.filter("render_html", ['$sce', function($sce) {
 	return function(html){
@@ -218,6 +219,15 @@ app.controller("mainController", function($scope, $http, $location) {
 				if (competition_only_paths.indexOf(path) >= 0) {
 					location.href = "/team";
 				}
+			}
+			if (!stylesheet_loaded && "stylesheet" in result) {
+				var style = document.createElement("link");
+				style.rel = "stylesheet";
+				style.id = "bootstrap_css";
+				style.href = result["stylesheet"];
+				$("link#bootstrap_css").remove();
+				document.body.appendChild(style);
+				stylesheet_loaded = true;
 			}
 		} else {
 			$scope.config.navbar.logged_in = false;

@@ -116,10 +116,10 @@ def get_ctf_name():
 	if name is None: return "OpenCTF"
 	else: return name.value
 
-def get_config(key):
+def get_config(key, default=None):
 	config = Config.query.filter_by(key=key).first()
 	if config is None:
-		return None
+		return default
 	return config.value
 
 def is_ctf_time():
