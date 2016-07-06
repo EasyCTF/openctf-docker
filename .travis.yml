@@ -6,6 +6,8 @@ install:
   - sudo apt-get update
   - sudo apt-get -y install libjpeg-dev libmysqlclient-dev memcached tmux mysql-client
   - pip install -r api/requirements.txt
+before_script:
+  - mysql -e 'create database openctf;'
 script:
   - export SQLALCHEMY_DATABASE_URI=mysql://root:@localhost/openctf
   - py.test
