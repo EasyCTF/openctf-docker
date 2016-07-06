@@ -7,7 +7,7 @@ install:
   - sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD'
   - sudo apt-get update
   - sudo apt-get -y install libjpeg-dev libmysqlclient-dev memcached tmux mysql-server mysql-client
-  - sudo pip install -r api/requirements.txt
+  - pip install -r api/requirements.txt
   - py.test --version
 script:
   - export SQLALCHEMY_DATABASE_URI=mysql://root:password@localhost/openctf
