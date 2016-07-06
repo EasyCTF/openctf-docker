@@ -3,10 +3,8 @@ sudo: required
 python:
   - "2.7"
 install:
-  - sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password $MYSQL_ROOT_PASSWORD'
-  - sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD'
   - sudo apt-get update
-  - sudo apt-get -y install libjpeg-dev libmysqlclient-dev memcached tmux mysql-server mysql-client
+  - sudo apt-get -y install libjpeg-dev libmysqlclient-dev memcached tmux mysql-client
   - pip install -r api/requirements.txt
   - py.test --version
 script:
@@ -15,7 +13,5 @@ script:
   - cd api && py.test
 services:
   - mysql
-env:
-  - MYSQL_ROOT_PASSWORD=password
 notifications:
   email: false
