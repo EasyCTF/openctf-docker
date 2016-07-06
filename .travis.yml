@@ -10,7 +10,7 @@ before_script:
   - mysql -e 'create database openctf;'
 script:
   - export SQLALCHEMY_DATABASE_URI=mysql://root:@localhost/openctf
-  - py.test
+  - coverage run -m pytest && coverage report
 services:
   - mysql
 notifications:
