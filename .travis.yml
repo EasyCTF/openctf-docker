@@ -8,7 +8,7 @@ install:
   - pip install -r api/requirements.txt
 script:
   - export SQLALCHEMY_DATABASE_URI=mysql://root:@localhost/openctf
-  - cd api && py.test
+  - py.test
 services:
   - mysql
 notifications:
