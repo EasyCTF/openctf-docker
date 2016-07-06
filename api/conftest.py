@@ -1,8 +1,8 @@
 import pytest
 
-from app import app as ctf_app
-from config import options
-from api.models import db as ctf_db
+from api.app import app as ctf_app
+from api.config import options
+from api.api.models import db as ctf_db
 
 @pytest.fixture(scope="session")
 def app(request):
