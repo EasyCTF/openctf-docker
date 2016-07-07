@@ -24,7 +24,9 @@ def admin_setup_init():
 			db.session.delete(item)
 		db.session.add(verification)
 		db.session.commit()
-		return { "success": 1 }
+
+		db.session.close()
+	return { "success": 1 }
 
 @blueprint.route("/setup", methods=["POST"])
 @api_wrapper
@@ -66,6 +68,8 @@ def admin_setup():
 		join_activity = UserActivity(_user.uid, 0)
 		db.session.add(join_activity)
 		db.session.commit()
+
+		db.session.close()
 
 	logger.log(__name__, "%s registered with %s" % (name.encode("utf-8"), email.encode("utf-8")))
 	user.login_user(username, password)
