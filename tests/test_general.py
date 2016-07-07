@@ -27,3 +27,7 @@ class TestGeneral():
 		response = json.loads(client.post("/api/admin/setup", data=options).data)
 		print response
 		assert response["success"] == 1
+
+	def test_setup_complete(self, client):
+		response = json.loads(client.get("/api/user/status").data)
+		assert "redirect" not in response

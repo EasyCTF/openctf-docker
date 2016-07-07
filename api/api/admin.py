@@ -58,18 +58,13 @@ def admin_setup():
 		Config("setup_complete", True)
 	]
 
-	_user = Users(name, username, email, password, utype=utype, admin=True)
+	#  _user = Users(name, username, email, password, utype=utype, admin=True)
+	user.register_user(name, username, email, password, utype=utype, admin=True)
 	with app.app_context():
 		for var in setup_vars:
 			db.session.add(var)
-
-		db.session.add(_user)
-		db.session.commit()
-		join_activity = UserActivity(_user.uid, 0)
-		db.session.add(join_activity)
-		db.session.commit()
-
-		db.session.close()
+			db.session.commit()
+			db.session.close()
 
 	logger.log(__name__, "%s registered with %s" % (name.encode("utf-8"), email.encode("utf-8")))
 	user.login_user(username, password)

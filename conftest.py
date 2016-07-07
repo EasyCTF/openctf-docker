@@ -52,7 +52,6 @@ def app(request):
 	app = ctf_app
 	app.config.from_object(options)
 	app.config["TESTING"] = True
-	app.api = ctf_api
 
 	ctx = app.test_request_context()
 	ctx.push()

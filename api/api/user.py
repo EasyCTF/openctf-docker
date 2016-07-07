@@ -170,20 +170,9 @@ def user_register():
 	password_confirm = params.get("password_confirm")
 	utype = int(params.get("type"))
 
-	user = Users(name, username, email, password, utype=utype)
-	token = utils.generate_string(length=64)
-	user.email_token = token
-	with app.app_context():
-		db.session.add(user)
-		db.session.commit()
-		join_activity = UserActivity(user.uid, 0)
-		db.session.add(join_activity)
-		db.session.commit()
-
-		db.session.close()
-
-	logger.log(__name__, "%s registered with %s" % (name.encode("utf-8"), email.encode("utf-8")))
+	register_user(name, username, email, password, utype, admin=False)
 	login_user(username, password)
+	logger.log(__name__, "%s registered with %s" % (name.encode("utf-8"), email.encode("utf-8")))
 
 	try:
 		send_verification(username, email, token)
@@ -194,14 +183,7 @@ def user_register():
 @blueprint.route("/logout", methods=["GET"])
 @api_wrapper
 def user_logout():
-	sid = session.get("sid")
-	username = session.get("username")
-	with app.app_context():
-		expired = LoginTokens.query.filter_by(username=username).all()
-		for expired_token in expired:
-			expired_token.active = False
-		db.session.commit()
-	session.clear()
+	logout_user()
 
 @blueprint.route("/login", methods=["POST"])
 @api_wrapper
@@ -471,6 +453,19 @@ UserSchema = Schema({
 	"notify": str
 }, extra=True)
 
+def register_user(name, username, email, password, utype, admin=False):
+	user = Users(name, username, email, password, utype=utype, admin=admin)
+	token = utils.generate_string(length=64)
+	user.email_token = token
+	with app.app_context():
+		db.session.add(user)
+		db.session.commit()
+		join_activity = UserActivity(user.uid, 0)
+		db.session.add(join_activity)
+		db.session.commit()
+		db.session.close()
+	return True
+
 def login_user(username, password, token=None):
 	"""
 	Logs in the user and creates a login-token with the specified username and password.
@@ -490,6 +485,16 @@ def login_user(username, password, token=None):
 		return False
 	create_login_token(username)
 	return True
+
+def logout_user():
+	sid = session.get("sid")
+	username = session.get("username")
+	with app.app_context():
+		expired = LoginTokens.query.filter_by(username=username).all()
+		for expired_token in expired:
+			expired_token.active = False
+		db.session.commit()
+	session.clear()
 
 def create_login_token(username):
 	user = get_user(username_lower=username.lower()).first()

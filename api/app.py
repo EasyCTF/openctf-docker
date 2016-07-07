@@ -11,6 +11,7 @@ from api.decorators import api_wrapper
 
 app.config.from_object(config.options)
 app.secret_key = config.SECRET_KEY
+app.api = api
 
 if not os.path.exists(app.config["UPLOAD_FOLDER"]):
 	os.makedirs(app.config["UPLOAD_FOLDER"])
