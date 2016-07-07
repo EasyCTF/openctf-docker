@@ -74,7 +74,7 @@ def db(request, app):
 	ctf_db.create_all()
 
 	def teardown():
-		ctf_db.session.close()
+		ctf_db.session.close_all()
 		ctf_db.reflect()
 		db_DropEverything(ctf_db)
 

@@ -11,7 +11,7 @@ class TestGeneral():
 		response = json.loads(client.get("/api/user/status").data)
 		assert "redirect" in response and response["redirect"] == "/setup"
 
-	def test_complete_setup(self, app, client, db):
+	def test_setup(self, app, client, db):
 		prepare = json.loads(client.get("/api/admin/setup/init").data)
 		assert prepare["success"] == 1
 
