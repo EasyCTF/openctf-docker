@@ -2,3 +2,7 @@
 .secret_key
 pfp
 logs
+.vagrant
+.cache
+*.log
+.coverage

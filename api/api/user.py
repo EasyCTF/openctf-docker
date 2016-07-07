@@ -180,6 +180,8 @@ def user_register():
 		db.session.add(join_activity)
 		db.session.commit()
 
+		db.session.close()
+
 	logger.log(__name__, "%s registered with %s" % (name.encode("utf-8"), email.encode("utf-8")))
 	login_user(username, password)
 
@@ -493,7 +495,7 @@ def create_login_token(username):
 	user = get_user(username_lower=username.lower()).first()
 	useragent = request.headers.get("User-Agent")
 	ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-	ip = ip.split(",")[0]
+	ip = ip.split(",")[0] if ip is not None else "None"
 
 	args = {
 		"ua": useragent,
@@ -523,6 +525,8 @@ def create_login_token(username):
 		session.permanent = True
 		if user.tid is not None:
 			session["tid"] = user.tid
+
+		db.session.close()
 
 	return True
 

@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import abort, request, session, make_response
+from flask import abort, request, session, make_response, current_app
 
 import json
 import traceback
@@ -13,18 +13,19 @@ response_header = { "Content-Type": "application/json; charset=utf-8" }
 def api_wrapper(f):
 	@wraps(f)
 	def wrapper(*args, **kwds):
-		if request.method == "POST":
-			try:
-				token = str(session.pop("csrf_token"))
-				provided_token = str(request.form.get("csrf_token"))
-				if not token or token != provided_token:
-					raise Exception
-			except Exception, e:
-				response = make_response(json.dumps({ "success": 0, "message": "Token has been tampered with." }), 403, response_header)
-				token = utils.generate_string()
-				response.set_cookie("csrf_token", token)
-				session["csrf_token"] = token
-				return response
+		if not("TESTING" in current_app.config and current_app.config["TESTING"] == True):
+			if request.method == "POST":
+				try:
+					token = str(session.pop("csrf_token"))
+					provided_token = str(request.form.get("csrf_token"))
+					if not token or token != provided_token:
+						raise Exception
+				except Exception, e:
+					response = make_response(json.dumps({ "success": 0, "message": "Token has been tampered with." }), 403, response_header)
+					token = utils.generate_string()
+					response.set_cookie("csrf_token", token)
+					session["csrf_token"] = token
+					return response
 
 		web_result = {}
 		response = 200
