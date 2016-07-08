@@ -23,9 +23,10 @@ import utils
 import yaml
 
 blueprint = Blueprint("admin", __name__)
-GIT_DIR = "/git"
+GIT_DIR = os.path.expanduser("~/git")
 if not os.path.exists(GIT_DIR):
 	os.mkdir(GIT_DIR)
+KEYFILE = os.path.expanduser("~/key")
 
 @blueprint.route("/setup/init")
 @api_wrapper
@@ -175,12 +176,12 @@ def clone_repository(payload):
 		shutil.rmtree(GIT_REPO)
 	repo = git.Repo.init(GIT_REPO)
 	origin = repo.create_remote("origin", payload["repository"]["ssh_url"])
-	f = open("/root/key", "w")
+	f = open(KEYFILE, "w")
 	f.write(utils.get_ssh_keys()[0])
 	f.close()
-	os.chmod("/root/key", 0600)
-	if os.system("cd %s; ssh-agent bash -c 'ssh-add /root/key; git pull origin master'" % GIT_REPO) == 0:
-		os.unlink("/root/key")
+	os.chmod(KEYFILE, 0600)
+	if os.system("cd %s; ssh-agent bash -c 'ssh-add %s; git pull origin master'" % (GIT_REPO, KEYFILE)) == 0:
+		os.unlink(KEYFILE)
 		problems = []
 		for problem in os.listdir(GIT_REPO):
 			problem = str(problem)
