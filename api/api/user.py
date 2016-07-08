@@ -9,6 +9,7 @@ from decorators import api_wrapper, WebException, login_required
 from schemas import verify_to_schema, check
 
 import datetime
+import io
 import logger, logging
 import os
 import cache
@@ -180,7 +181,7 @@ def user_register():
 		return { "success": 1, "message": "Verification email sent to %s" % email }
 	return { "success": 0, "message": "Failed." }
 
-@blueprint.route("/logout", methods=["GET"])
+@blueprint.route("/logout", methods=["GET", "POST"])
 @api_wrapper
 def user_logout():
 	logout_user()
@@ -373,10 +374,14 @@ def user_avatar_upload():
 
 	try:
 		pfp = "pfp/%d.png" % _user.uid
-		os.remove(pfp)
-		im = Image.open(fname)
-		im = im.resize((256, 256), Image.ANTIALIAS)
-		im.save(open(pfp, "w"), "PNG")
+		if os.path.exists(pfp): os.remove(pfp)
+		with open(fname, "rb") as f1:
+			imageIO = io.BytesIO(f1.read())
+			imageIO.seek(0)
+			f1.close()
+			im = Image.open(imageIO)
+			im = im.resize((256, 256), Image.ANTIALIAS)
+			im.save(open(pfp, "w"), "PNG")
 		return { "success": 1, "message": "Uploaded!" }
 	except Exception, e:
 		raise WebException(str(e))

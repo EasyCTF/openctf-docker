@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_file
 
 app = Flask(__name__)
 
@@ -34,8 +34,9 @@ def hello_world():
 	return { "success": 1, "message": "The API is apparently functional." }
 
 @app.errorhandler(404)
+@api_wrapper
 def page_not_found(e):
-	return send_file("../web/index.html"), 404
+	return { "success": 0, "message": "You done goofed." }
 
 app.register_blueprint(api.activity.blueprint, url_prefix="/api/activity")
 app.register_blueprint(api.admin.blueprint, url_prefix="/api/admin")

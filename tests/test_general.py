@@ -7,11 +7,15 @@ class TestGeneral():
 		response = json.loads(client.get("/api").data)
 		assert response["success"] == 1
 
+	def test_404(self, client):
+		response = json.loads(client.get("/404").data)
+		print response["success"] == 0
+
 	def test_requires_setup(self, client):
 		response = json.loads(client.get("/api/user/status").data)
 		assert "redirect" in response and response["redirect"] == "/setup"
 
-	def test_setup(self, app, client, db):
+	def test_setup(self, app, client):
 		prepare = json.loads(client.get("/api/admin/setup/init").data)
 		assert prepare["success"] == 1
 
