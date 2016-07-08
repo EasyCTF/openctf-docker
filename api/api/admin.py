@@ -171,21 +171,24 @@ def github_webhook():
 	return { "success": 1, "message": "Initiated import." }
 
 def clone_repository(payload):
-	GIT_REPO = os.path.join(GIT_DIR, payload["delivery_id"])
+	GIT_REPO = str(os.path.join(GIT_DIR, payload["delivery_id"]))
 	if os.path.exists(GIT_REPO):
 		shutil.rmtree(GIT_REPO)
 	repo = git.Repo.init(GIT_REPO)
 	origin = repo.create_remote("origin", payload["repository"]["ssh_url"])
-	f = open(KEYFILE, "w")
-	f.write(utils.get_ssh_keys()[0])
-	f.close()
+	with open(KEYFILE, "w") as f:
+		f.write(utils.get_ssh_keys()[0])
+	with open(os.path.expanduser("~/.ssh/config"), "w") as f:
+		f.write("Host *\n\tStrictHostKeyChecking no")
 	os.chmod(KEYFILE, 0600)
+	os.chmod(os.path.expanduser("~/.ssh/config"), 0600)
 	if os.system("cd %s; ssh-agent bash -c 'ssh-add %s; git pull origin master'" % (GIT_REPO, KEYFILE)) == 0:
 		os.unlink(KEYFILE)
 		problems = []
 		for problem in os.listdir(GIT_REPO):
 			problem = str(problem)
 			if problem in [".", "..", ".git", ".exclude"]: continue
+			if not os.path.isdir(os.path.join(GIT_REPO, problem)): continue
 			files = os.listdir(os.path.join(GIT_REPO, problem))
 			for required_file in ["grader.py", "problem.yml", "description.md"]:
 				if required_file not in files:
@@ -223,7 +226,7 @@ def import_problem(path, pid):
 
 		try:
 			problem.add_problem(title, category, description, value, grader, pid=pid, hint=hint)
-		except e:
+		except Exception, e:
 			logger.log(__name__, "Error when importing problem '%s': %s" % (pid, str(e)))
 
 def get_settings():
