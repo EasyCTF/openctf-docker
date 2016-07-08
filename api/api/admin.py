@@ -6,18 +6,27 @@ from schemas import verify_to_schema, check
 from operator import itemgetter
 from StringIO import StringIO
 
+import git
 import hashlib
 import hmac
 import json
 import logger
+import markdown2
+import os
 import paramiko
 import problem
+import shutil
 import team
 import threading
 import user
 import utils
+import yaml
 
 blueprint = Blueprint("admin", __name__)
+GIT_DIR = os.path.expanduser("~/git")
+if not os.path.exists(GIT_DIR):
+	os.mkdir(GIT_DIR)
+KEYFILE = os.path.expanduser("~/key")
 
 @blueprint.route("/setup/init")
 @api_wrapper
@@ -156,11 +165,66 @@ def github_webhook():
 		client.connect(hostname="github.com", username="git", pkey=private_key)
 	except paramiko.AuthenticationException:
 		raise WebException("Github is denying access to this repository. Make sure the public key has been installed correctly.")
-	thread = threading.Thread(target=import_repository, args=(url))
+	data["delivery_id"] = request.headers["X-GitHub-Delivery"]
+	# thread = threading.Thread(target=import_repository, args=(data))
+	clone_repository(data)
 	return { "success": 1, "message": "Initiated import." }
 
-def import_repository(url):
-	pass
+def clone_repository(payload):
+	GIT_REPO = os.path.join(GIT_DIR, payload["delivery_id"])
+	if os.path.exists(GIT_REPO):
+		shutil.rmtree(GIT_REPO)
+	repo = git.Repo.init(GIT_REPO)
+	origin = repo.create_remote("origin", payload["repository"]["ssh_url"])
+	f = open(KEYFILE, "w")
+	f.write(utils.get_ssh_keys()[0])
+	f.close()
+	os.chmod(KEYFILE, 0600)
+	if os.system("cd %s; ssh-agent bash -c 'ssh-add %s; git pull origin master'" % (GIT_REPO, KEYFILE)) == 0:
+		os.unlink(KEYFILE)
+		problems = []
+		for problem in os.listdir(GIT_REPO):
+			problem = str(problem)
+			if problem in [".", "..", ".git", ".exclude"]: continue
+			files = os.listdir(os.path.join(GIT_REPO, problem))
+			for required_file in ["grader.py", "problem.yml", "description.md"]:
+				if required_file not in files:
+					raise WebException("Expected required file %s in '%s'." % (required_file, problem))
+			metadata = yaml.load(open(os.path.join(GIT_REPO, problem, "problem.yml")))
+			for required_key in ["title", "category", "value"]:
+				if required_key not in metadata:
+					raise WebException("Expected required key %s in 'problem.yml'." % required_key)
+			problems.append(problem)
+		# thread = threading.Thread(target=import_repository, args=(GIT_REPO, problems))
+		import_repository(GIT_REPO, problems)
+	else:
+		raise WebException("Failed to pull from remote.")
+
+def import_repository(path, problems):
+	logger.log(__name__, "Importing %s" % str(problems))
+	for problem in problems:
+		problem_path = os.path.join(path, problem)
+		if os.path.isdir(problem_path):
+			import_problem(problem_path, problem)
+
+def import_problem(path, pid):
+	with app.app_context():
+		existing_problem = Problems.query.filter_by(pid=pid).first()
+		if existing_problem is not None:
+			db.session.delete(existing_problem)
+			db.session.commit()
+		metadata = yaml.load(open(os.path.join(path, "problem.yml")))
+		title = metadata.get("title")
+		category = metadata.get("category")
+		value = int(metadata.get("value"))
+		hint = metadata.get("hint")
+		description = open(os.path.join(path, "description.md")).read()
+		grader = open(os.path.join(path, "grader.py")).read()
+
+		try:
+			problem.add_problem(title, category, description, value, grader, pid=pid, hint=hint)
+		except e:
+			logger.log(__name__, "Error when importing problem '%s': %s" % (pid, str(e)))
 
 def get_settings():
 	settings_return = {}

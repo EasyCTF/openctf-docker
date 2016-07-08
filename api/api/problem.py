@@ -36,46 +36,10 @@ def problem_add():
 	grader_contents = params.get("grader_contents")
 	bonus = params.get("bonus")
 	autogen = params.get("autogen")
-
-	title_exists = Problems.query.filter_by(title=title).first()
-	if title_exists:
-		raise WebException("Problem name already taken.")
-
-	pid = utils.generate_string()
-	while Problems.query.filter_by(pid=pid).first():
-		pid = utils.generate_string()
-
-	if category == "Programming":
-		programming.validate_judge(grader_contents)
-	else:
-		validate_grader(grader_contents, autogen=int(autogen))
-
-	grader_folder = os.path.join(app.config["GRADER_FOLDER"], pid)
-	if not os.path.exists(grader_folder):
-		os.makedirs(grader_folder)
-	grader_path = os.path.join(grader_folder, "grader.py")
-	grader_file = open(grader_path, "w")
-	grader_file.write(grader_contents)
-	grader_file.close()
-
-	problem = Problems(pid, title, category, description, value, grader_path, bonus=bonus, hint=hint, autogen=autogen)
-	db.session.add(problem)
-
-	files = request.files.getlist("files[]")
-	for _file in files:
-		filename = secure_filename(_file.filename)
-
-		if len(filename) == 0:
-			continue
-
-		file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-
-		_file.save(file_path)
-		db_file = Files(problem.pid, "/".join(file_path.split("/")[2:]))
-		db.session.add(db_file)
-
-	db.session.commit()
-
+	try:
+		add_problem(title, category, description, value, grader_contents, hint=hint, bonus=bonus, autogen=autogen)
+	except e:
+		raise WebException(str(e))
 	return { "success": 1, "message": "Success!" }
 
 @blueprint.route("/delete", methods=["POST"])
@@ -294,6 +258,40 @@ def get_problem(title=None, pid=None):
 @cache.memoize()
 def num_problems():
 	return Problems.query.filter_by().count()
+
+def add_problem(title, category, description, value, grader_contents, pid=utils.generate_string(), hint="", bonus=0, autogen=0):
+	title_exists = Problems.query.filter_by(title=title).first()
+	if title_exists:
+		raise WebException("Problem name already taken.")
+	while Problems.query.filter_by(pid=pid).first():
+		pid = utils.generate_string()
+	if category == "Programming":
+		programming.validate_judge(grader_contents)
+	else:
+		validate_grader(grader_contents, autogen=int(autogen))
+
+	grader_folder = os.path.join(app.config["GRADER_FOLDER"], pid)
+	if not os.path.exists(grader_folder):
+		os.makedirs(grader_folder)
+	grader_path = os.path.join(grader_folder, "grader.py")
+	grader_file = open(grader_path, "w")
+	grader_file.write(grader_contents)
+	grader_file.close()
+
+	problem = Problems(pid, title, category, description, value, grader_path, bonus=bonus, hint=hint, autogen=autogen)
+	db.session.add(problem)
+
+	files = request.files.getlist("files[]")
+	for _file in files:
+		filename = secure_filename(_file.filename)
+		if len(filename) == 0:
+			continue
+		file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+		_file.save(file_path)
+		db_file = Files(problem.pid, "/".join(file_path.split("/")[2:]))
+		db.session.add(db_file)
+	db.session.commit()
+	db.session.close()
 
 def validate_grader(grader_contents, autogen=False):
 	tmp_grader = "/tmp/grader.py"

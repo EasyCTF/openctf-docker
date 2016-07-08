@@ -299,12 +299,12 @@ def user_avatar(user):
 			return abort(404)
 		uid = _user.uid
 	try:
-		return send_file("pfp/%d.png" % uid, mimetype="image/png")
+		return send_file(os.path.join(app.config["PFP_FOLDER"], "%d.png" % uid), mimetype="image/png")
 	except:
 		user = get_user(uid=uid).first()
 		if user is not None:
 			utils.generate_identicon(user.email, user.uid)
-			return send_file("pfp/%d.png" % uid, mimetype="image/png")
+			return send_file(os.path.join(app.config["PFP_FOLDER"], "%d.png" % uid), mimetype="image/png")
 		return abort(404)
 
 @blueprint.route("/twofactor/qr", methods=["GET"])
@@ -373,7 +373,7 @@ def user_avatar_upload():
 	f.save(fname)
 
 	try:
-		pfp = "pfp/%d.png" % _user.uid
+		pfp = os.path.join(app.config["PFP_FOLDER"], "%d.png" % _user.uid)
 		if os.path.exists(pfp): os.remove(pfp)
 		with open(fname, "rb") as f1:
 			imageIO = io.BytesIO(f1.read())
@@ -396,7 +396,7 @@ def user_avatar_remove():
 	_user = get_user().first()
 
 	try:
-		pfp = "pfp/%d.png" % _user.uid
+		pfp = os.path.join(app.config["PFP_FOLDER"], "%d.png" % _user.uid)
 		os.remove(pfp)
 		return { "success": 1, "message": "Removed!" }
 	except Exception, e:
