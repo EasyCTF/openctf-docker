@@ -23,6 +23,12 @@ import utils
 import yaml
 
 blueprint = Blueprint("admin", __name__)
+SSH_FOLDER = os.path.expanduser("~/.ssh")
+if not os.path.exists(SSH_FOLDER):
+	os.mkdir(SSH_FOLDER)
+SSH_CONFIG_FILE = os.path.join(SSH_FOLDER, "config")
+if not os.path.exists(SSH_CONFIG_FILE):
+	os.mknod(SSH_CONFIG_FILE)
 GIT_DIR = os.path.expanduser("~/git")
 if not os.path.exists(GIT_DIR):
 	os.mkdir(GIT_DIR)
@@ -178,10 +184,10 @@ def clone_repository(payload):
 	origin = repo.create_remote("origin", payload["repository"]["ssh_url"])
 	with open(KEYFILE, "w") as f:
 		f.write(utils.get_ssh_keys()[0])
-	with open(os.path.expanduser("~/.ssh/config"), "w") as f:
+	with open(SSH_CONFIG_FILE, "w") as f:
 		f.write("Host *\n\tStrictHostKeyChecking no")
 	os.chmod(KEYFILE, 0600)
-	os.chmod(os.path.expanduser("~/.ssh/config"), 0600)
+	os.chmod(SSH_CONFIG_FILE, 0600)
 	if os.system("cd %s; ssh-agent bash -c 'ssh-add %s; git pull origin master'" % (GIT_REPO, KEYFILE)) == 0:
 		os.unlink(KEYFILE)
 		problems = []
