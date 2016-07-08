@@ -120,7 +120,7 @@ def get_config(key, default=None):
 	config = Config.query.filter_by(key=key).first()
 	if config is None:
 		return default
-	return config.value
+	return str(config.value)
 
 def is_ctf_time():
 	start = get_config("start_time")

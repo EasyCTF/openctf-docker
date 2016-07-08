@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, request
 from flask import current_app as app
-from decorators import admins_only, api_wrapper, WebException
+from decorators import admins_only, api_wrapper, webhook_wrapper, WebException
 from models import db, Config, Problems, Teams, Users, UserActivity
 from schemas import verify_to_schema, check
 from operator import itemgetter
 
+import hashlib
+import hmac
 import logger
 import problem
 import team
@@ -97,10 +99,13 @@ def admin_settings_update():
 	with app.app_context():
 		for key in params:
 			config = Config.query.filter_by(key=key).first()
-			new = params[key]
-			if config.value != new:
-				config.value = params[key]
-				db.session.add(config)
+			if config is None:
+				config = Config(key, params[key])
+			else:
+				new = params[key]
+				if config.value != new:
+					config.value = params[key]
+			db.session.add(config)
 		db.session.commit()
 
 	return { "success": 1, "message": "Success!" }
@@ -125,7 +130,19 @@ def admin_info():
 	if "end_time" in settings: result["end_time"] = settings["end_time"]
 	if "team_size" in settings: result["team_size"] = settings["team_size"]
 	if "stylesheet" in settings: result["stylesheet"] = settings["stylesheet"]
+	if "webhook_secret" in settings: result["webhook_secret"] = settings["webhook_secret"]
 	return { "success": 1, "info": result }
+
+@blueprint.route("/webhook", methods=["POST"])
+@webhook_wrapper
+def github_webhook():
+	secret = utils.get_config("webhook_secret", "")
+	if len(secret) == 0:
+		raise WebException("A webhook has not been enabled for this platform. Set a secret to enable the webhook.")
+	hashed = hmac.new(secret, request.get_data(), hashlib.sha1)
+	if request.headers["X-Hub-Signature"] != "sha1=%s" % hashed.hexdigest():
+		raise WebException("Forged request detected.")
+	raise WebException("Not implemented yet.")
 
 def get_settings():
 	settings_return = {}

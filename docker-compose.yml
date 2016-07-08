@@ -15,7 +15,7 @@ api:
     - 8000
   volumes:
     - ./api:/openctf
-  entrypoint: chmod +x wait-for-it.sh && ./wait-for-it.sh db_1
+  entrypoint: ./wait-for-it.sh db_1
 
 db:
   environment:

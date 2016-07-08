@@ -24,8 +24,8 @@ import utils
 blueprint = Blueprint("problem", __name__)
 
 @blueprint.route("/add", methods=["POST"])
-@admins_only
 @api_wrapper
+@admins_only
 def problem_add():
 	params = utils.flat_multi(request.form)
 	title = params.get("title")

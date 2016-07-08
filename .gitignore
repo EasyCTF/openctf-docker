@@ -6,3 +6,4 @@ logs
 .cache
 *.log
 .coverage
+graders

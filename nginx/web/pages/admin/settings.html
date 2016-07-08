@@ -35,6 +35,24 @@
 					</fieldset>
 				</div>
 			</div>
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">Github Webhook</h4>
+				</div>
+				<div class="panel-body">
+					<fieldset class="container-fluid">
+						<div class="row">
+							<div class="col-sm-12 form-group">
+								<p>Set a secret to enable the webhook. <a href="https://github.com/EasyCTF/openctf-docker/wiki/Integration-with-Github-Webhooks" target="_blank">Help?</a></p>
+								<label class="col-sm-12" for="webhook_secret"><small>Webhook Secret</small></label>
+								<div class="col-sm-12">
+									<input class="form-control" type="text" name="webhook_secret" id="webhook_secret" placeholder="Webhook Secret" autocomplete="off" ng-value="settings['webhook_secret']"/>
+								</div>
+							</div>
+						</div>
+					</fieldset>
+				</div>
+			</div>
 		</div>
 		<div class="col-md-4 col-sm-6 col-xs-12">
 			<div class="panel panel-default">
