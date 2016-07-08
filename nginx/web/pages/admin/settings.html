@@ -46,8 +46,12 @@
 								<p>Set a secret to enable the webhook. <a href="https://github.com/EasyCTF/openctf-docker/wiki/Integration-with-Github-Webhooks" target="_blank">Help?</a></p>
 								<label class="col-sm-12" for="webhook_secret"><small>Webhook Secret</small></label>
 								<div class="col-sm-12">
-									<input class="form-control" type="text" name="webhook_secret" id="webhook_secret" placeholder="Webhook Secret" autocomplete="off" ng-value="settings['webhook_secret']"/>
+									<input class="form-control" type="password" name="webhook_secret" id="webhook_secret" placeholder="Webhook Secret" autocomplete="off" ng-value="settings['webhook_secret']"/>
 								</div>
+							</div>
+							<div class="col-sm-12 form-group" ng-show="settings['public_key']">
+								<p>This is the platform's public key. Make sure you add this key to your <b>Deploy Keys</b> in order for the platform to successfully pull your repository.</p>
+								<code style="word-wrap:break-word;">{{ settings['public_key'] }}</code>
 							</div>
 						</div>
 					</fieldset>

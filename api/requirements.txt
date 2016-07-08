@@ -12,3 +12,6 @@ pyqrcode
 python-memcached
 coverage
 gitpython
+pycrypto
+cryptography==1.2.1
+paramiko

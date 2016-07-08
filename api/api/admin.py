@@ -4,13 +4,16 @@ from decorators import admins_only, api_wrapper, webhook_wrapper, WebException
 from models import db, Config, Problems, Teams, Users, UserActivity
 from schemas import verify_to_schema, check
 from operator import itemgetter
+from StringIO import StringIO
 
 import hashlib
 import hmac
 import json
 import logger
+import paramiko
 import problem
 import team
+import threading
 import user
 import utils
 
@@ -131,7 +134,6 @@ def admin_info():
 	if "end_time" in settings: result["end_time"] = settings["end_time"]
 	if "team_size" in settings: result["team_size"] = settings["team_size"]
 	if "stylesheet" in settings: result["stylesheet"] = settings["stylesheet"]
-	if "webhook_secret" in settings: result["webhook_secret"] = settings["webhook_secret"]
 	return { "success": 1, "info": result }
 
 @blueprint.route("/webhook", methods=["POST"])
@@ -145,11 +147,27 @@ def github_webhook():
 	if request.headers["X-Hub-Signature"] != "sha1=%s" % hashed.hexdigest():
 		raise WebException("Forged request detected.")
 	data = json.loads(payload)
-	raise WebException("Not implemented yet.")
+	url = data["repository"]["ssh_url"]
+	key, dummy = utils.get_ssh_keys()
+	client = paramiko.SSHClient()
+	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	private_key = paramiko.RSAKey.from_private_key(StringIO(key))
+	try:
+		client.connect(hostname="github.com", username="git", pkey=private_key)
+	except paramiko.AuthenticationException:
+		raise WebException("Github is denying access to this repository. Make sure the public key has been installed correctly.")
+	thread = threading.Thread(target=import_repository, args=(url))
+	return { "success": 1, "message": "Initiated import." }
+
+def import_repository(url):
+	pass
 
 def get_settings():
 	settings_return = {}
 	settings = Config.query.all()
 	for setting in settings:
+		if setting.key in ["public_key", "private_key"]: continue
 		settings_return[setting.key] = setting.value
+		if setting.key == "webhook_secret" and len(setting.value) > 1:
+			dummy, settings_return["public_key"] = utils.get_ssh_keys()
 	return settings_return

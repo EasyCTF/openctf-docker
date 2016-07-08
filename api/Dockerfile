@@ -1,8 +1,8 @@
 FROM ubuntu:latest
 
 RUN apt-get update
-RUN apt-get -y install python python-pip libjpeg-dev python-dev libmysqlclient-dev memcached tmux python-nose mysql-client
-RUN pip install Flask mysql-python Flask-SQLAlchemy SQLAlchemy gunicorn requests voluptuous Pillow markdown2 onetimepass pyqrcode python-memcached nose
+RUN apt-get -y install python python-pip libjpeg-dev python-dev libmysqlclient-dev memcached tmux python-nose mysql-client libffi-dev libssl-dev
+RUN pip install Flask mysql-python Flask-SQLAlchemy SQLAlchemy gunicorn requests voluptuous Pillow markdown2 onetimepass pyqrcode python-memcached nose coverage cryptography==1.2.1 gitpython pycrypto paramiko
 
 RUN mkdir /openctf
 COPY . /openctf/

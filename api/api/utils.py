@@ -1,6 +1,14 @@
+from flask import current_app as app
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from PIL import Image, ImageDraw
+from Crypto.PublicKey import RSA
+
 import datetime
 import hashlib
 import json
+import os
 import random
 import re
 import requests
@@ -8,11 +16,6 @@ import string
 import traceback
 import unicodedata
 
-from PIL import Image, ImageDraw
-
-from flask import current_app as app
-from functools import wraps
-from werkzeug.security import generate_password_hash, check_password_hash
 
 __check_email_format = lambda email: re.match(".+@.+\..{2,}", email) is not None
 __check_ascii = lambda s: all(c in string.printable for c in s)
@@ -105,7 +108,7 @@ def generate_identicon(email, filename):
 	image.save(open("pfp/%s.png" % filename, "w"), "PNG")
 	return
 
-from models import Config
+from models import db, Config
 def is_setup_complete():
 	obj = Config.query.filter_by(key="setup_complete").first()
 	if obj is None: return False
@@ -141,3 +144,19 @@ def is_ctf_time():
 		return True
 
 	return False
+
+def get_ssh_keys():
+	private_key = get_config("private_key")
+	public_key = get_config("public_key")
+	if not (private_key and public_key):
+		key = RSA.generate(2048)
+		private_key = key.exportKey("PEM")
+		public_key = key.publickey().exportKey("OpenSSH")
+		with app.app_context():
+			private = Config("private_key", private_key)
+			public = Config("public_key", public_key)
+			db.session.add(private)
+			db.session.add(public)
+			db.session.commit()
+			db.session.close()
+	return private_key, public_key
