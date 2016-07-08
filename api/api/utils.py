@@ -105,7 +105,7 @@ def generate_identicon(email, filename):
 			draw.rectangle([(0*cell + margin, (i-10)*cell + margin), (1*cell + margin, (i-9)*cell + margin)], fill=c)
 			draw.rectangle([(4*cell + margin, (i-10)*cell + margin), (5*cell + margin, (i-9)*cell + margin)], fill=c)
 
-	image.save(open("pfp/%s.png" % filename, "w"), "PNG")
+	image.save(open(os.path.join(app.config["PFP_FOLDER"], "%d.png" % filename), "w"), "PNG")
 	return
 
 from models import db, Config

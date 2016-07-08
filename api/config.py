@@ -27,6 +27,7 @@ options = {
 	"SQLALCHEMY_TEST_DATABASE_URI": os.getenv("SQLALCHEMY_TEST_DATABASE_URI", DEFAULT_DATABASE_URI),
 	"SQLALCHEMY_TRACK_MODIFICATIONS": False,
 	"ROOT_FOLDER": ROOT_FOLDER,
+	"PFP_FOLDER": os.path.abspath(os.path.join(ROOT_FOLDER, "pfp")),
 	"UPLOAD_FOLDER": os.path.abspath(os.path.join(ROOT_FOLDER, "web/files")),
 	"MAILGUN_URL": os.getenv("MAILGUN_URL", ""),
 	"MAILGUN_KEY": os.getenv("MAILGUN_KEY", ""),

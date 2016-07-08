@@ -15,8 +15,8 @@ app.api = api
 
 if not os.path.exists(app.config["UPLOAD_FOLDER"]):
 	os.makedirs(app.config["UPLOAD_FOLDER"])
-if not os.path.exists("pfp"):
-	os.makedirs("pfp")
+if not os.path.exists(app.config["PFP_FOLDER"]):
+	os.makedirs(app.config["PFP_FOLDER"])
 
 with app.app_context():
 	from api.models import db, Config, Users, UserActivity, Teams, Problems, Files, Solves, LoginTokens, TeamInvitations, Tickets, TicketReplies, ProgrammingSubmissions
