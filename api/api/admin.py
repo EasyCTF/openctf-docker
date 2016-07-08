@@ -6,18 +6,24 @@ from schemas import verify_to_schema, check
 from operator import itemgetter
 from StringIO import StringIO
 
+import git
 import hashlib
 import hmac
 import json
 import logger
+import os
 import paramiko
 import problem
+import shutil
 import team
 import threading
 import user
 import utils
 
 blueprint = Blueprint("admin", __name__)
+GIT_DIR = "/git"
+if not os.path.exists(GIT_DIR):
+	os.mkdir(GIT_DIR)
 
 @blueprint.route("/setup/init")
 @api_wrapper
@@ -156,10 +162,26 @@ def github_webhook():
 		client.connect(hostname="github.com", username="git", pkey=private_key)
 	except paramiko.AuthenticationException:
 		raise WebException("Github is denying access to this repository. Make sure the public key has been installed correctly.")
-	thread = threading.Thread(target=import_repository, args=(url))
+	data["delivery_id"] = request.headers["X-GitHub-Delivery"]
+	# thread = threading.Thread(target=import_repository, args=(data))
+	clone_repository(data)
 	return { "success": 1, "message": "Initiated import." }
 
-def import_repository(url):
+def clone_repository(payload):
+	GIT_REPO = os.path.join(GIT_DIR, payload["delivery_id"])
+	if os.path.exists(GIT_REPO):
+		shutil.rmtree(GIT_REPO)
+	repo = git.Repo.init(GIT_REPO)
+	origin = repo.create_remote("origin", payload["repository"]["ssh_url"])
+	f = open("/root/key", "w")
+	f.write(utils.get_ssh_keys()[0])
+	f.close()
+	os.chmod("/root/key", 0600)
+	os.system("cd %s; ssh-agent bash -c 'ssh-add /root/key; git pull origin master'" % GIT_REPO)
+	os.unlink("/root/key")
+	thread = threading.Thread(target=import_repository, args=(GIT_REPO,))
+
+def import_repository(path):
 	pass
 
 def get_settings():
