@@ -174,12 +174,13 @@ def problem_data():
 		solves = get_solves(problem.pid)
 		solved = Solves.query.filter_by(pid=problem.pid, tid=session.get("tid", None), correct=1).first()
 		solved = ["Solved", "Unsolved"][solved is None]
+		description = process_description(problem.description)
 
 		data = {
 			"pid": problem.pid,
 			"title": problem.title,
 			"category": problem.category,
-			"description": markdown2.markdown(problem.description),
+			"description": description,
 			"hint": problem.hint,
 			"value": problem.value,
 			"solves": solves,
@@ -292,6 +293,11 @@ def add_problem(title, category, description, value, grader_contents, pid=utils.
 		db.session.add(db_file)
 	db.session.commit()
 	db.session.close()
+
+def process_description(description):
+	description = markdown2.markdown(description)
+	description = description.replace("href=\"files/", "target=\"_blank\" href=\"files/") # dirty hack
+	return description
 
 def validate_grader(grader_contents, autogen=False):
 	tmp_grader = "/tmp/grader.py"
