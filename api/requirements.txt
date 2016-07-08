@@ -14,4 +14,5 @@ python-memcached
 coverage
 gitpython
 pycrypto
+pyyaml
 paramiko

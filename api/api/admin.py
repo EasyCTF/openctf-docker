@@ -11,6 +11,7 @@ import hashlib
 import hmac
 import json
 import logger
+import markdown2
 import os
 import paramiko
 import problem
@@ -19,6 +20,7 @@ import team
 import threading
 import user
 import utils
+import yaml
 
 blueprint = Blueprint("admin", __name__)
 GIT_DIR = "/git"
@@ -177,12 +179,51 @@ def clone_repository(payload):
 	f.write(utils.get_ssh_keys()[0])
 	f.close()
 	os.chmod("/root/key", 0600)
-	os.system("cd %s; ssh-agent bash -c 'ssh-add /root/key; git pull origin master'" % GIT_REPO)
-	os.unlink("/root/key")
-	thread = threading.Thread(target=import_repository, args=(GIT_REPO,))
+	if os.system("cd %s; ssh-agent bash -c 'ssh-add /root/key; git pull origin master'" % GIT_REPO) == 0:
+		os.unlink("/root/key")
+		problems = []
+		for problem in os.listdir(GIT_REPO):
+			problem = str(problem)
+			if problem in [".", "..", ".git", ".exclude"]: continue
+			files = os.listdir(os.path.join(GIT_REPO, problem))
+			for required_file in ["grader.py", "problem.yml", "description.md"]:
+				if required_file not in files:
+					raise WebException("Expected required file %s in '%s'." % (required_file, problem))
+			metadata = yaml.load(open(os.path.join(GIT_REPO, problem, "problem.yml")))
+			for required_key in ["title", "category", "value"]:
+				if required_key not in metadata:
+					raise WebException("Expected required key %s in 'problem.yml'." % required_key)
+			problems.append(problem)
+		# thread = threading.Thread(target=import_repository, args=(GIT_REPO, problems))
+		import_repository(GIT_REPO, problems)
+	else:
+		raise WebException("Failed to pull from remote.")
 
-def import_repository(path):
-	pass
+def import_repository(path, problems):
+	logger.log(__name__, "Importing %s" % str(problems))
+	for problem in problems:
+		problem_path = os.path.join(path, problem)
+		if os.path.isdir(problem_path):
+			import_problem(problem_path, problem)
+
+def import_problem(path, pid):
+	with app.app_context():
+		existing_problem = Problems.query.filter_by(pid=pid).first()
+		if existing_problem is not None:
+			db.session.delete(existing_problem)
+			db.session.commit()
+		metadata = yaml.load(open(os.path.join(path, "problem.yml")))
+		title = metadata.get("title")
+		category = metadata.get("category")
+		value = int(metadata.get("value"))
+		hint = metadata.get("hint")
+		description = open(os.path.join(path, "description.md")).read()
+		grader = open(os.path.join(path, "grader.py")).read()
+
+		try:
+			problem.add_problem(title, category, description, value, grader, pid=pid, hint=hint)
+		except e:
+			logger.log(__name__, "Error when importing problem '%s': %s" % (pid, str(e)))
 
 def get_settings():
 	settings_return = {}
