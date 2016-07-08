@@ -7,6 +7,7 @@ from operator import itemgetter
 
 import hashlib
 import hmac
+import json
 import logger
 import problem
 import team
@@ -139,9 +140,11 @@ def github_webhook():
 	secret = utils.get_config("webhook_secret", "")
 	if len(secret) == 0:
 		raise WebException("A webhook has not been enabled for this platform. Set a secret to enable the webhook.")
-	hashed = hmac.new(secret, request.get_data(), hashlib.sha1)
+	payload = request.get_data()
+	hashed = hmac.new(secret, payload, hashlib.sha1)
 	if request.headers["X-Hub-Signature"] != "sha1=%s" % hashed.hexdigest():
 		raise WebException("Forged request detected.")
+	data = json.loads(payload)
 	raise WebException("Not implemented yet.")
 
 def get_settings():

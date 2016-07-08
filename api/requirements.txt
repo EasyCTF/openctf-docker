@@ -11,3 +11,4 @@ onetimepass
 pyqrcode
 python-memcached
 coverage
+gitpython
