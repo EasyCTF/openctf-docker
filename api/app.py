@@ -1,4 +1,4 @@
-from flask import Flask, send_file
+from flask import Flask, request, send_file, abort
 
 app = Flask(__name__)
 
@@ -32,6 +32,14 @@ with app.app_context():
 @api_wrapper
 def hello_world():
 	return { "success": 1, "message": "The API is apparently functional." }
+
+@app.route("/files/<path:path>")
+def get_file(path):
+	request_path = os.path.join(app.config["UPLOAD_FOLDER"], path)
+	if os.path.exists(request_path):
+		return send_file(request_path)
+	else:
+		abort(404)
 
 @app.errorhandler(404)
 @api_wrapper

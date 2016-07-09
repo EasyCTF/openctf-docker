@@ -230,6 +230,17 @@ def import_problem(path, pid):
 		description = open(os.path.join(path, "description.md")).read()
 		grader = open(os.path.join(path, "grader.py")).read()
 
+		if "files" in metadata:
+			files = metadata["files"]
+			files_dir = os.path.join(app.config["UPLOAD_FOLDER"], pid)
+			if os.path.exists(files_dir):
+				shutil.rmtree(files_dir)
+			os.mkdir(files_dir)
+			for file in files:
+				src = os.path.join(path, file)
+				if os.path.exists(src):
+					shutil.copyfile(src, os.path.join(files_dir, file))
+
 		try:
 			problem.add_problem(title, category, description, value, grader, pid=pid, hint=hint)
 		except Exception, e:

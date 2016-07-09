@@ -261,6 +261,10 @@ def num_problems():
 	return Problems.query.filter_by().count()
 
 def add_problem(title, category, description, value, grader_contents, pid=utils.generate_string(), hint="", bonus=0, autogen=0):
+	grader_contents = str(grader_contents)
+	pid = str(pid)
+	value = int(value)
+
 	title_exists = Problems.query.filter_by(title=title).first()
 	if title_exists:
 		raise WebException("Problem name already taken.")
@@ -296,7 +300,7 @@ def add_problem(title, category, description, value, grader_contents, pid=utils.
 
 def process_description(description):
 	description = markdown2.markdown(description)
-	description = description.replace("href=\"files/", "target=\"_blank\" href=\"files/") # dirty hack
+	description = description.replace("href=\"", "target=\"_blank\" href=\"") # dirty hack
 	return description
 
 def validate_grader(grader_contents, autogen=False):
